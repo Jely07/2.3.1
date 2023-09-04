@@ -1,8 +1,6 @@
 package com.jely91.springMVCHibernate.entity;
 
 
-import net.bytebuddy.dynamic.loading.InjectionClassLoader;
-
 import javax.persistence.*;
 
 @Entity

@@ -1,47 +1,44 @@
 package com.jely91.springMVCHibernate.dao;
 
 import com.jely91.springMVCHibernate.entity.Employee;
-import org.hibernate.Query;
-import org.hibernate.Session;
-import org.hibernate.SessionFactory;
 import org.springframework.stereotype.Repository;
-
+import org.springframework.transaction.annotation.Transactional;
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
+import javax.persistence.TypedQuery;
 import java.util.List;
 
 @Repository
+@Transactional(readOnly = true)
 public class EmployeeDaoImpl implements EmployeeDao {
-    private final SessionFactory sessionFactory;
-    public EmployeeDaoImpl(SessionFactory sessionFactory) {
-        this.sessionFactory = sessionFactory;
-    }
+    @PersistenceContext
+    private EntityManager entityManager;
 
     @Override
     public List<Employee> getAllEmployees() {
-        Session session = sessionFactory.getCurrentSession();
-        List<Employee> allEmployees = session.createQuery("from Employee", Employee.class)
+        List<Employee> allEmployees = entityManager.createQuery("from Employee", Employee.class)
                 .getResultList();
         return allEmployees;
     }
 
     @Override
+    @Transactional
     public void saveEmployee(Employee employee) {
-        Session session =sessionFactory.getCurrentSession();
-        session.saveOrUpdate(employee);
+        entityManager.merge(employee);
     }
 
     @Override
     public Employee getEmployee(int id) {
-        Session session =sessionFactory.getCurrentSession();
-        Employee employee =session.get(Employee.class,id);
-        return employee;
+        TypedQuery<Employee> typedQuery = entityManager.createQuery("from Employee " +
+                "where id =:id",Employee.class);
+        typedQuery.setParameter("id",id);
+        return typedQuery.getResultStream().findAny().orElse(null);
     }
 
     @Override
+    @Transactional
     public void deleteEmployee(int id) {
-        Session session=sessionFactory.getCurrentSession();
-        Query<Employee> query = session.createQuery("delete from Employee " +
-                "where id=:employeeId");
-       query.setParameter("employeeId",id);
-       query.executeUpdate();
+        Employee employee =entityManager.find(Employee.class,id);
+        entityManager.remove(employee);
     }
 }
